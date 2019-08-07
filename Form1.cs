@@ -8,7 +8,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace SearchApp
 {
@@ -45,15 +46,15 @@ namespace SearchApp
             }
         }
 
-        private void SearchButton_Click(object sender, EventArgs e)
+        private async void SearchButton_ClickAsync(object sender, EventArgs e)
         {
             var files = new List<string>();
             try
             {
-                ListDirectory(ResultTreeView, DirectoryTextBox.Text);
+                await Task.Run(() => ListDirectory(ResultTreeView, DirectoryTextBox.Text));
+
             }
             catch { }
-             
         }
 
         private void FileTemplateTextBox_TextChanged(object sender, EventArgs e)
@@ -84,6 +85,10 @@ namespace SearchApp
             var rootDirectory = new DirectoryInfo(path);
             var node = new TreeNode(rootDirectory.Name) { Tag = rootDirectory };
             stack.Push(node);
+            treeView.Invoke(new Action(() =>
+            {
+                treeView.Nodes.Add(node);
+            }));
 
             while(stack.Count > 0)
             {
@@ -92,13 +97,27 @@ namespace SearchApp
                 foreach (var directory in directoryInfo.GetDirectories())
                 {
                     var childDirectoryNode = new TreeNode(directory.Name) { Tag = directory };
-                    currentNode.Nodes.Add(childDirectoryNode);
+
+                    treeView.Invoke(new Action(() =>
+                    {
+                        currentNode.Nodes.Add(childDirectoryNode);
+                        if (currentNode.Nodes.Count == 1)
+                            currentNode.Expand();
+                    }));
                     stack.Push(childDirectoryNode);
+                    Thread.Sleep(500);
                 }
                 foreach (var file in directoryInfo.GetFiles(FileTemplateTextBox.Text))
-                    currentNode.Nodes.Add(new TreeNode(file.Name));
+                {
+                    Thread.Sleep(500);
+                    treeView.Invoke(new Action(() =>
+                      {
+                          currentNode.Nodes.Add(new TreeNode(file.Name));
+                          if (currentNode.Nodes.Count == 1)
+                              currentNode.Expand();
+                      }));
+                }
             }
-            treeView.Nodes.Add(node);
         }
 
         private static bool CheckFile(string path)
