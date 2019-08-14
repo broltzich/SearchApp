@@ -48,11 +48,12 @@ namespace SearchApp
 
         private async void SearchButton_ClickAsync(object sender, EventArgs e)
         {
-            var files = new List<string>();
+            
             try
             {
+                // var rootDir = new DirectoryInfo(DirectoryTextBox.Text);
+                // var fileList = Directory.GetFiles(DirectoryTextBox.Text, FileTemplateTextBox.Text, SearchOption.AllDirectories);
                 await Task.Run(() => ListDirectory(ResultTreeView, DirectoryTextBox.Text));
-
             }
             catch { }
         }
@@ -84,45 +85,81 @@ namespace SearchApp
             var stack = new Stack<TreeNode>();
             var rootDirectory = new DirectoryInfo(path);
             var node = new TreeNode(rootDirectory.Name) { Tag = rootDirectory };
-            stack.Push(node);
-            treeView.Invoke(new Action(() =>
+            var nodeDictionary = new Dictionary<string, TreeNode>
             {
-                treeView.Nodes.Add(node);
-            }));
-
-            while(stack.Count > 0)
+                { rootDirectory.FullName, node }
+            };
+            stack.Push(node);
+            treeView.Invoke(new Action(() => { treeView.Nodes.Add(node); }));
+            while (stack.Count > 0)
             {
                 var currentNode = stack.Pop();
                 var directoryInfo = (DirectoryInfo)currentNode.Tag;
+                foreach (var file in directoryInfo.GetFiles(FileTemplateTextBox.Text))
+                {
+                    // file checked
+                    var newFileNode = new TreeNode(file.Name);
+                    nodeDictionary.Add(file.FullName, newFileNode);
+                    if (nodeDictionary.ContainsKey(directoryInfo.FullName))
+                    {
+                        treeView.Invoke(new Action(() =>
+                        {
+                            nodeDictionary[directoryInfo.FullName].Nodes.Add(newFileNode);
+                            treeView.ExpandAll();
+                        }));
+                    }
+                    else
+                    {
+                        nodeDictionary.Add(directoryInfo.FullName, currentNode);
+                        nodeDictionary[directoryInfo.FullName].Nodes.Add(nodeDictionary[file.FullName]);
+                        var tmp = (DirectoryInfo)currentNode.Tag;
+                        var lastDirectoryInfo = new DirectoryInfo(tmp.FullName);
+                        while (!nodeDictionary.ContainsKey(tmp.Parent.FullName))
+                        {
+                            nodeDictionary.Add(tmp.Parent.FullName, new TreeNode(tmp.Parent.Name));
+                            nodeDictionary[tmp.Parent.FullName].Nodes.Add(nodeDictionary[tmp.FullName]);
+                            lastDirectoryInfo = tmp;
+                            tmp = tmp.Parent;
+                        }
+                        treeView.Invoke(new Action(() =>
+                        {
+                            nodeDictionary[tmp.FullName].Nodes.Add(nodeDictionary[lastDirectoryInfo.FullName]);
+                            treeView.ExpandAll();
+                        }));
+                    }
+                }
                 foreach (var directory in directoryInfo.GetDirectories())
                 {
                     var childDirectoryNode = new TreeNode(directory.Name) { Tag = directory };
-
-                    treeView.Invoke(new Action(() =>
-                    {
-                        currentNode.Nodes.Add(childDirectoryNode);
-                        if (currentNode.Nodes.Count == 1)
-                            currentNode.Expand();
-                    }));
                     stack.Push(childDirectoryNode);
-                    Thread.Sleep(500);
-                }
-                foreach (var file in directoryInfo.GetFiles(FileTemplateTextBox.Text))
-                {
-                    Thread.Sleep(500);
-                    treeView.Invoke(new Action(() =>
-                      {
-                          currentNode.Nodes.Add(new TreeNode(file.Name));
-                          if (currentNode.Nodes.Count == 1)
-                              currentNode.Expand();
-                      }));
                 }
             }
         }
 
-        private static bool CheckFile(string path)
+        
+        private static bool CheckFile(string path, string contentText)
         {
-            return false;
+            var fileText = File.ReadAllText(path);
+            if (fileText.Contains(contentText))
+                return true;
+            else
+                return false;
+        }
+
+        //private TreeNode FindByTag(DirectoryInfo directoryInfo, TreeNode rootNode)
+        //{
+        //    foreach (TreeNode node in rootNode.Nodes)
+        //    {
+        //        if (node.Tag.Equals(directoryInfo)) return node;
+        //        TreeNode next = FindByTag(directoryInfo, node);
+        //        if (next != null) return next;
+        //    }
+        //    return null;
+        //}
+
+        private void Button1_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

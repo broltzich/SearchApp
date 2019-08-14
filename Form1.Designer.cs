@@ -38,6 +38,7 @@
             this.FileContentTextBox = new System.Windows.Forms.TextBox();
             this.SearchButton = new System.Windows.Forms.Button();
             this.ResultTreeView = new System.Windows.Forms.TreeView();
+            this.button1 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label1
@@ -137,11 +138,22 @@
             this.ResultTreeView.TabIndex = 8;
             this.ResultTreeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.ResultTreeView_AfterSelect);
             // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(718, 277);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(33, 33);
+            this.button1.TabIndex = 9;
+            this.button1.Text = "???";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.Button1_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 688);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.ResultTreeView);
             this.Controls.Add(this.SearchButton);
             this.Controls.Add(this.FileContentTextBox);
@@ -172,6 +184,7 @@
         private System.Windows.Forms.TextBox FileContentTextBox;
         private System.Windows.Forms.Button SearchButton;
         private System.Windows.Forms.TreeView ResultTreeView;
+        private System.Windows.Forms.Button button1;
     }
 }
 
