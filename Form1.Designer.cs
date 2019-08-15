@@ -71,6 +71,7 @@
             this.DirectoryTextBox.Name = "DirectoryTextBox";
             this.DirectoryTextBox.Size = new System.Drawing.Size(540, 25);
             this.DirectoryTextBox.TabIndex = 2;
+            this.DirectoryTextBox.Text = "D:\\trash";
             this.DirectoryTextBox.TextChanged += new System.EventHandler(this.DirectoryTextBox_TextChanged);
             // 
             // folderBrowserDialog1
@@ -106,6 +107,7 @@
             this.FileTemplateTextBox.Name = "FileTemplateTextBox";
             this.FileTemplateTextBox.Size = new System.Drawing.Size(540, 25);
             this.FileTemplateTextBox.TabIndex = 5;
+            this.FileTemplateTextBox.Text = "a*";
             this.FileTemplateTextBox.TextChanged += new System.EventHandler(this.FileTemplateTextBox_TextChanged);
             // 
             // FileContentTextBox
@@ -116,6 +118,7 @@
             this.FileContentTextBox.Name = "FileContentTextBox";
             this.FileContentTextBox.Size = new System.Drawing.Size(540, 87);
             this.FileContentTextBox.TabIndex = 6;
+            this.FileContentTextBox.Text = "as";
             this.FileContentTextBox.TextChanged += new System.EventHandler(this.FileContentTextBox_TextChanged);
             // 
             // SearchButton

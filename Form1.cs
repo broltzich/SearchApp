@@ -53,7 +53,7 @@ namespace SearchApp
             {
                 // var rootDir = new DirectoryInfo(DirectoryTextBox.Text);
                 // var fileList = Directory.GetFiles(DirectoryTextBox.Text, FileTemplateTextBox.Text, SearchOption.AllDirectories);
-                await Task.Run(() => ListDirectory(ResultTreeView, DirectoryTextBox.Text, FileTemplateTextBox.Text, FileContentTextBox.Text));
+                await Task.Run(() => ListDirectory(ResultTreeView, DirectoryTextBox.Text, FileTemplateTextBox.Text, FileContentTextBox.Text),);
             }
             catch { }
         }
@@ -78,7 +78,7 @@ namespace SearchApp
 
         }
 
-        private void ListDirectory(TreeView treeView, string path, string pattern, string FileContent)
+        private void ListDirectory(TreeView treeView, string path, string pattern, string fileContent)
         {
             treeView.Nodes.Clear();
 
@@ -97,21 +97,23 @@ namespace SearchApp
                 var directoryInfo = (DirectoryInfo)currentNode.Tag;
                 foreach (var file in directoryInfo.GetFiles(pattern))
                 {
-                    if (CheckFile(file, FileContent))
+                    if (CheckFile(file, fileContent))
                     {
                         treeView.Invoke(new Action(() =>
                         {
-                            if (nodeDictionary.ContainsKey(file.Directory.FullName))
-                                nodeDictionary[directoryInfo.FullName].Nodes.Add(new TreeNode(file.Name));
+                            if (nodeDictionary.TryGetValue(file.Directory.FullName, out var dir))
+                                dir.Nodes.Add(new TreeNode(file.Name));
                             else
                             {
                                 var branch = GetBranch(nodeDictionary, file);
-                                nodeDictionary[((DirectoryInfo)branch.Tag).FullName].Nodes.Add(branch);
+                                nodeDictionary[((DirectoryInfo)branch.Tag).Parent.FullName].Nodes.Add(branch);
                             }
-                            treeView.ExpandAll();
+
                         }));
                     }
                 }
+                if (currentNode.Nodes.Count > 0)
+                    treeView.Invoke(new Action(() => currentNode.Expand()));
                 foreach (var directory in directoryInfo.GetDirectories())
                 {
                     var childDirectoryNode = new TreeNode(directory.Name) { Tag = directory };
@@ -122,20 +124,23 @@ namespace SearchApp
 
         private TreeNode GetBranch(Dictionary<string, TreeNode> nodeDictrionary, FileInfo file)
         {
-            var tmp = file.Directory;
+            var currentDirectory = file.Directory;
             var node = new TreeNode(file.Name) { Tag = file };
-            if (!nodeDictrionary.ContainsKey(tmp.FullName))
+            while (!nodeDictrionary.ContainsKey(currentDirectory.FullName))
             {
-                nodeDictrionary.Add(tmp.FullName, new TreeNode(tmp.Name) { Tag = tmp });
-                nodeDictrionary[tmp.FullName].Nodes.Add(node);
-                while (!nodeDictrionary.ContainsKey(tmp.Parent.FullName))
-                {
-                    nodeDictrionary.Add(tmp.Parent.FullName, new TreeNode(tmp.Parent.Name));
-                    nodeDictrionary[tmp.Parent.FullName].Nodes.Add(new TreeNode(tmp.Name) { Tag = tmp });
-                    tmp = tmp.Parent;
-                }
-                node = nodeDictrionary[tmp.FullName];
+                //nodeDictrionary.Add(tmp.FullName, new TreeNode(tmp.Name) { Tag = tmp });
+                //nodeDictrionary[tmp.FullName].Nodes.Add(node);
+                var tmp = node;
+                node = new TreeNode(currentDirectory.Name) { Tag = currentDirectory };
+                node.Nodes.Add(tmp);
+                node.Expand();
+                nodeDictrionary[currentDirectory.FullName] = node;
+                //nodeDictrionary.Add(currentDirectory.Parent.FullName, new TreeNode(currentDirectory.Parent.Name) { Tag = currentDirectory.Parent });
+                //nodeDictrionary[currentDirectory.Parent.FullName].Nodes.Add(new TreeNode(currentDirectory.Name) { Tag = currentDirectory });
+                currentDirectory = currentDirectory.Parent;
+                
             }
+            //node = nodeDictrionary[tmp.FullName];
             return node;
         }
 
@@ -163,7 +168,9 @@ namespace SearchApp
         private void Button1_Click(object sender, EventArgs e)
         {
             var dir = new DirectoryInfo("D:/trash");
-            var file = new FileInfo("D:/trash/abab.txt");
+            var parent = dir.Parent.FullName;
+            MessageBox.Show(parent);
+
         }
     }
 }
