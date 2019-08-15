@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Threading.Tasks;
+//using System.Threading.Tasks;
 using System.Threading;
 
 namespace SearchApp
@@ -53,7 +53,7 @@ namespace SearchApp
             {
                 // var rootDir = new DirectoryInfo(DirectoryTextBox.Text);
                 // var fileList = Directory.GetFiles(DirectoryTextBox.Text, FileTemplateTextBox.Text, SearchOption.AllDirectories);
-                await Task.Run(() => ListDirectory(ResultTreeView, DirectoryTextBox.Text));
+                await Task.Run(() => ListDirectory(ResultTreeView, DirectoryTextBox.Text, FileTemplateTextBox.Text, FileContentTextBox.Text));
             }
             catch { }
         }
@@ -78,7 +78,7 @@ namespace SearchApp
 
         }
 
-        private void ListDirectory(TreeView treeView, string path)
+        private void ListDirectory(TreeView treeView, string path, string pattern, string FileContent)
         {
             treeView.Nodes.Clear();
 
@@ -95,35 +95,19 @@ namespace SearchApp
             {
                 var currentNode = stack.Pop();
                 var directoryInfo = (DirectoryInfo)currentNode.Tag;
-                foreach (var file in directoryInfo.GetFiles(FileTemplateTextBox.Text))
+                foreach (var file in directoryInfo.GetFiles(pattern))
                 {
-                    // file checked
-                    var newFileNode = new TreeNode(file.Name);
-                    nodeDictionary.Add(file.FullName, newFileNode);
-                    if (nodeDictionary.ContainsKey(directoryInfo.FullName))
+                    if (CheckFile(file, FileContent))
                     {
                         treeView.Invoke(new Action(() =>
                         {
-                            nodeDictionary[directoryInfo.FullName].Nodes.Add(newFileNode);
-                            treeView.ExpandAll();
-                        }));
-                    }
-                    else
-                    {
-                        nodeDictionary.Add(directoryInfo.FullName, currentNode);
-                        nodeDictionary[directoryInfo.FullName].Nodes.Add(nodeDictionary[file.FullName]);
-                        var tmp = (DirectoryInfo)currentNode.Tag;
-                        var lastDirectoryInfo = new DirectoryInfo(tmp.FullName);
-                        while (!nodeDictionary.ContainsKey(tmp.Parent.FullName))
-                        {
-                            nodeDictionary.Add(tmp.Parent.FullName, new TreeNode(tmp.Parent.Name));
-                            nodeDictionary[tmp.Parent.FullName].Nodes.Add(nodeDictionary[tmp.FullName]);
-                            lastDirectoryInfo = tmp;
-                            tmp = tmp.Parent;
-                        }
-                        treeView.Invoke(new Action(() =>
-                        {
-                            nodeDictionary[tmp.FullName].Nodes.Add(nodeDictionary[lastDirectoryInfo.FullName]);
+                            if (nodeDictionary.ContainsKey(file.Directory.FullName))
+                                nodeDictionary[directoryInfo.FullName].Nodes.Add(new TreeNode(file.Name));
+                            else
+                            {
+                                var branch = GetBranch(nodeDictionary, file);
+                                nodeDictionary[((DirectoryInfo)branch.Tag).FullName].Nodes.Add(branch);
+                            }
                             treeView.ExpandAll();
                         }));
                     }
@@ -136,10 +120,29 @@ namespace SearchApp
             }
         }
 
-        
-        private static bool CheckFile(string path, string contentText)
+        private TreeNode GetBranch(Dictionary<string, TreeNode> nodeDictrionary, FileInfo file)
         {
-            var fileText = File.ReadAllText(path);
+            var tmp = file.Directory;
+            var node = new TreeNode(file.Name) { Tag = file };
+            if (!nodeDictrionary.ContainsKey(tmp.FullName))
+            {
+                nodeDictrionary.Add(tmp.FullName, new TreeNode(tmp.Name) { Tag = tmp });
+                nodeDictrionary[tmp.FullName].Nodes.Add(node);
+                while (!nodeDictrionary.ContainsKey(tmp.Parent.FullName))
+                {
+                    nodeDictrionary.Add(tmp.Parent.FullName, new TreeNode(tmp.Parent.Name));
+                    nodeDictrionary[tmp.Parent.FullName].Nodes.Add(new TreeNode(tmp.Name) { Tag = tmp });
+                    tmp = tmp.Parent;
+                }
+                node = nodeDictrionary[tmp.FullName];
+            }
+            return node;
+        }
+
+        
+        private static bool CheckFile(FileInfo file, string contentText)
+        {
+            var fileText = File.ReadAllText(file.FullName);
             if (fileText.Contains(contentText))
                 return true;
             else
@@ -159,7 +162,8 @@ namespace SearchApp
 
         private void Button1_Click(object sender, EventArgs e)
         {
-
+            var dir = new DirectoryInfo("D:/trash");
+            var file = new FileInfo("D:/trash/abab.txt");
         }
     }
 }
