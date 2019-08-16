@@ -39,6 +39,7 @@
             this.SearchButton = new System.Windows.Forms.Button();
             this.ResultTreeView = new System.Windows.Forms.TreeView();
             this.button1 = new System.Windows.Forms.Button();
+            this.cancellButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label1
@@ -124,7 +125,7 @@
             // SearchButton
             // 
             this.SearchButton.Font = new System.Drawing.Font("Microsoft YaHei", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.SearchButton.Location = new System.Drawing.Point(351, 274);
+            this.SearchButton.Location = new System.Drawing.Point(266, 274);
             this.SearchButton.Name = "SearchButton";
             this.SearchButton.Size = new System.Drawing.Size(115, 27);
             this.SearchButton.TabIndex = 7;
@@ -151,11 +152,22 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.Button1_Click);
             // 
+            // cancellButton
+            // 
+            this.cancellButton.Location = new System.Drawing.Point(396, 274);
+            this.cancellButton.Name = "cancellButton";
+            this.cancellButton.Size = new System.Drawing.Size(117, 27);
+            this.cancellButton.TabIndex = 10;
+            this.cancellButton.Text = "Cancell";
+            this.cancellButton.UseVisualStyleBackColor = true;
+            this.cancellButton.Click += new System.EventHandler(this.CancellButton_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 688);
+            this.Controls.Add(this.cancellButton);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.ResultTreeView);
             this.Controls.Add(this.SearchButton);
@@ -188,6 +200,7 @@
         private System.Windows.Forms.Button SearchButton;
         private System.Windows.Forms.TreeView ResultTreeView;
         private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button cancellButton;
     }
 }
 

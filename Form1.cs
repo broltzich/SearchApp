@@ -15,6 +15,7 @@ namespace SearchApp
 {
     public partial class Form1 : Form
     {
+        CancellationTokenSource tokenSource = new CancellationTokenSource();
         public Form1()
         {
             InitializeComponent();
@@ -51,11 +52,13 @@ namespace SearchApp
             
             try
             {
-                // var rootDir = new DirectoryInfo(DirectoryTextBox.Text);
-                // var fileList = Directory.GetFiles(DirectoryTextBox.Text, FileTemplateTextBox.Text, SearchOption.AllDirectories);
-                await Task.Run(() => ListDirectory(ResultTreeView, DirectoryTextBox.Text, FileTemplateTextBox.Text, FileContentTextBox.Text),);
+                await Task.Run(() => ListDirectory(ResultTreeView, DirectoryTextBox.Text, FileTemplateTextBox.Text, FileContentTextBox.Text), tokenSource.Token);
             }
-            catch { }
+            catch  { }
+        }
+        private void CancellButton_Click(object sender, EventArgs e)
+        {
+            tokenSource.Cancel();
         }
 
         private void FileTemplateTextBox_TextChanged(object sender, EventArgs e)
@@ -80,8 +83,8 @@ namespace SearchApp
 
         private void ListDirectory(TreeView treeView, string path, string pattern, string fileContent)
         {
+            tokenSource = new CancellationTokenSource();
             treeView.Nodes.Clear();
-
             var stack = new Stack<TreeNode>();
             var rootDirectory = new DirectoryInfo(path);
             var node = new TreeNode(rootDirectory.Name) { Tag = rootDirectory };
@@ -97,6 +100,21 @@ namespace SearchApp
                 var directoryInfo = (DirectoryInfo)currentNode.Tag;
                 foreach (var file in directoryInfo.GetFiles(pattern))
                 {
+                    // stop point
+                    try
+                    {
+                        tokenSource.Token.ThrowIfCancellationRequested();
+
+                    }
+                    catch (OperationCanceledException ex)
+                    {
+                        MessageBox.Show($"{nameof(OperationCanceledException)} thrown with message: {ex.Message}");
+                    }
+                    finally
+                    {
+                        tokenSource.Dispose();
+                    }
+
                     if (CheckFile(file, fileContent))
                     {
                         treeView.Invoke(new Action(() =>
@@ -108,8 +126,8 @@ namespace SearchApp
                                 var branch = GetBranch(nodeDictionary, file);
                                 nodeDictionary[((DirectoryInfo)branch.Tag).Parent.FullName].Nodes.Add(branch);
                             }
-
                         }));
+                        Thread.Sleep(1500);
                     }
                 }
                 if (currentNode.Nodes.Count > 0)
@@ -128,17 +146,12 @@ namespace SearchApp
             var node = new TreeNode(file.Name) { Tag = file };
             while (!nodeDictrionary.ContainsKey(currentDirectory.FullName))
             {
-                //nodeDictrionary.Add(tmp.FullName, new TreeNode(tmp.Name) { Tag = tmp });
-                //nodeDictrionary[tmp.FullName].Nodes.Add(node);
                 var tmp = node;
                 node = new TreeNode(currentDirectory.Name) { Tag = currentDirectory };
                 node.Nodes.Add(tmp);
                 node.Expand();
                 nodeDictrionary[currentDirectory.FullName] = node;
-                //nodeDictrionary.Add(currentDirectory.Parent.FullName, new TreeNode(currentDirectory.Parent.Name) { Tag = currentDirectory.Parent });
-                //nodeDictrionary[currentDirectory.Parent.FullName].Nodes.Add(new TreeNode(currentDirectory.Name) { Tag = currentDirectory });
                 currentDirectory = currentDirectory.Parent;
-                
             }
             //node = nodeDictrionary[tmp.FullName];
             return node;
@@ -168,9 +181,17 @@ namespace SearchApp
         private void Button1_Click(object sender, EventArgs e)
         {
             var dir = new DirectoryInfo("D:/trash");
-            var parent = dir.Parent.FullName;
-            MessageBox.Show(parent);
+            var parent = dir.Parent;
+            string pp;
+            try
+            {
+                pp = parent.Parent.FullName;
+                MessageBox.Show(pp);
+            }
+            catch { }
+            
 
         }
+
     }
 }
